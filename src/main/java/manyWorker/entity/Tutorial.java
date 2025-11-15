@@ -31,7 +31,7 @@ public class Tutorial extends DomainEntity {
     private String resumen;
     
     @ElementCollection
-    // Validamos que sea una URL y termina con una extensión de imagen 
+    // Validamos que sea una URL y termina con una extensión de imagen ignorando case
     private List<
     	@URL 
     	@Pattern( regexp = ".*\\.(jpg|jpeg|png|gif)$", flags = Pattern.Flag.CASE_INSENSITIVE) 

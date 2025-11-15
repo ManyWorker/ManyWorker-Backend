@@ -40,6 +40,7 @@ public class TareaService {
             tarea.setPrecioMax(datos.getPrecioMax());
             tarea.setFechaFin(datos.getFechaFin());
             tarea.setCategoria(datos.getCategoria());
+            tarea.setCliente(datos.getCliente());
             return tareaRepository.save(tarea);
         }
         return null;

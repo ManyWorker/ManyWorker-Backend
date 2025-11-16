@@ -25,88 +25,145 @@ public class ClienteController {
     private ClienteService clienteService;
 
     @GetMapping
-    @Operation(summary = "Obtener todos los clientes", description = "Devuelve una lista completa de todos los clientes registrados en el sistema.")
+    @Operation(summary = "Obtener todos los clientes", description = "Devuelve una lista de todos los clientes registrados en el sistema")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Lista de clientes obtenida correctamente")
+        @ApiResponse(responseCode = "200", description = "Lista de clientes obtenida correctamente"),
+        @ApiResponse(responseCode = "204", description = "No hay clientes registrados")
     })
-    public ResponseEntity<List<Cliente>> findAll() {
-        return ResponseEntity.ok(clienteService.findAll());
+    public ResponseEntity<?> findAll() {
+        List<Cliente> clientes = clienteService.findAll();
+        if (clientes.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).body("No hay clientes registrados en el sistema");
+        }
+        return ResponseEntity.ok(clientes);
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Buscar cliente por ID", description = "Busca un cliente específico utilizando su ID.")
+    @Operation(summary = "Buscar cliente por ID", description = "Busca un cliente específico utilizando su ID")
     @ApiResponses(value = { 
-            @ApiResponse(responseCode = "200", description = "Cliente encontrado"),
-            @ApiResponse(responseCode = "400", description = "Cliente no encontrado")
+        @ApiResponse(responseCode = "200", description = "Cliente encontrado"),
+        @ApiResponse(responseCode = "404", description = "Cliente no encontrado"),
+        @ApiResponse(responseCode = "400", description = "ID inválido")
     })
-    public ResponseEntity<Cliente> findById(@PathVariable int id) {
+    public ResponseEntity<?> findById(@PathVariable int id) {
+        if (id <= 0) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("ID de cliente inválido");
+        }
+        
         Optional<Cliente> oCliente = clienteService.findById(id);
-        return oCliente.map(ResponseEntity::ok)
-                     .orElseGet(() -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null));
+        
+        if (oCliente.isPresent()) {
+            return ResponseEntity.ok(oCliente.get());
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Cliente con ID " + id + " no encontrado");
+        }
     }
 
     @PostMapping
-    @Operation(summary = "Crear un nuevo cliente", description = "Registra un nuevo cliente en la base de datos.")
+    @Operation(summary = "Crear un nuevo cliente", description = "Registra un nuevo cliente en el sistema")
     @ApiResponses(value = { 
-            @ApiResponse(responseCode = "200", description = "Cliente creado correctamente"),
-            @ApiResponse(responseCode = "500", description = "Error interno del servidor al crear el cliente") 
+        @ApiResponse(responseCode = "201", description = "Cliente creado correctamente"),
+        @ApiResponse(responseCode = "400", description = "Datos del cliente inválidos"),
+        @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
-    public ResponseEntity<String> save(@RequestBody Cliente cliente) {
-        clienteService.save(cliente);
-        return ResponseEntity.status(HttpStatus.OK).body("Cliente creado correctamente");
+    public ResponseEntity<?> save(@RequestBody Cliente cliente) {
+        try {
+            if (cliente.getNombre() == null || cliente.getNombre().trim().isEmpty()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("El nombre del cliente es obligatorio");
+            }
+            if (cliente.getApellido() == null || cliente.getApellido().trim().isEmpty()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("El apellido del cliente es obligatorio");
+            }
+            if (cliente.getCorreo() == null || cliente.getCorreo().trim().isEmpty()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("El correo del cliente es obligatorio");
+            }
+            
+            Cliente savedCliente = clienteService.save(cliente);
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body("Cliente creado correctamente con ID: " + savedCliente.getId());
+                    
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error al crear el cliente: " + e.getMessage());
+        }
     }
 
     @PutMapping("/{id}")
-    @Operation(summary = "Actualizar un cliente", description = "Actualiza la información de un cliente existente según su ID.")
+    @Operation(summary = "Actualizar un cliente", description = "Actualiza la información de un cliente existente")
     @ApiResponses(value = { 
-            @ApiResponse(responseCode = "200", description = "Cliente actualizado correctamente"),
-            @ApiResponse(responseCode = "400", description = "Cliente no encontrado o datos inválidos"),
-            @ApiResponse(responseCode = "500", description = "Error interno del servidor al actualizar el cliente") 
+        @ApiResponse(responseCode = "200", description = "Cliente actualizado correctamente"),
+        @ApiResponse(responseCode = "404", description = "Cliente no encontrado"),
+        @ApiResponse(responseCode = "400", description = "Datos inválidos"),
+        @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
-    public ResponseEntity<String> update(@PathVariable int id, @RequestBody Cliente cliente) {
-        if (clienteService.update(id, cliente) == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Cliente no encontrado");
-        } else {
-            return ResponseEntity.status(HttpStatus.OK).body("Cliente actualizado correctamente");
+    public ResponseEntity<?> update(@PathVariable int id, @RequestBody Cliente cliente) {
+        try {
+            if (id <= 0) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("ID de cliente inválido");
+            }
+            
+            Cliente updatedCliente = clienteService.update(id, cliente);
+            if (updatedCliente == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Cliente con ID " + id + " no encontrado");
+            }
+            
+            return ResponseEntity.ok("Cliente actualizado correctamente");
+            
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error al actualizar el cliente: " + e.getMessage());
         }
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "Eliminar un cliente", description = "Elimina un cliente existente de la base de datos utilizando su ID.")
+    @Operation(summary = "Eliminar un cliente", description = "Elimina un cliente existente del sistema")
     @ApiResponses(value = { 
-            @ApiResponse(responseCode = "200", description = "Cliente eliminado correctamente"),
-            @ApiResponse(responseCode = "400", description = "Cliente no encontrado") 
+        @ApiResponse(responseCode = "200", description = "Cliente eliminado correctamente"),
+        @ApiResponse(responseCode = "404", description = "Cliente no encontrado"),
+        @ApiResponse(responseCode = "400", description = "ID inválido"),
+        @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
-    public ResponseEntity<String> delete(@PathVariable int id) {
-        Optional<Cliente> oCliente = clienteService.findById(id);
-        if (oCliente.isPresent()) {
+    public ResponseEntity<?> delete(@PathVariable int id) {
+        try {
+            if (id <= 0) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("ID de cliente inválido");
+            }
+            
+            if (!clienteService.existsById(id)) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Cliente con ID " + id + " no encontrado");
+            }
+            
             clienteService.delete(id);
-            return ResponseEntity.status(HttpStatus.OK).body("Cliente eliminado correctamente");
-        } else {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Cliente no encontrado");
+            return ResponseEntity.ok("Cliente eliminado correctamente");
+            
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error al eliminar el cliente: " + e.getMessage());
         }
     }
     
-    //Edicion de datos personales
-    @PutMapping("/update/{id}")
-    public ResponseEntity<Cliente> updateCliente(@PathVariable int id, @RequestBody Cliente updatedCliente) {
-        Cliente cliente = clienteService.updateCliente(id, updatedCliente);
-        return ResponseEntity.ok(cliente);
+    @GetMapping("/exportar/{id}")
+    @Operation(summary = "Exportar datos del cliente", description = "Exporta todos los datos de un cliente en formato estructurado")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Datos del cliente exportados correctamente"),
+        @ApiResponse(responseCode = "404", description = "Cliente no encontrado"),
+        @ApiResponse(responseCode = "400", description = "ID inválido"),
+        @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
+    public ResponseEntity<?> exportarDatos(@PathVariable int id) {
+        try {
+            if (id <= 0) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("ID de cliente inválido");
+            }
+            
+            Map<String, Object> datos = clienteService.exportarDatos(id);
+            return ResponseEntity.ok(datos);
+            
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error al exportar datos del cliente: " + e.getMessage());
+        }
     }
-    
-    //Exportacion de datos personales
-    @GetMapping("/exportar/{id}/export")
-    public ResponseEntity<Map<String, Object>> exportarDatos(@PathVariable int id) {
-        Map<String, Object> datos = clienteService.exportarDatos(id);
-        return ResponseEntity.ok(datos);
-    }
-
-    //Eliminacion de datos personales
-    @DeleteMapping("/borrar/{id}")
-    public ResponseEntity<Void> eliminarCliente(@PathVariable int id) {
-        clienteService.eliminarCliente(id);
-        return ResponseEntity.noContent().build();
-    }
-
-    
 }

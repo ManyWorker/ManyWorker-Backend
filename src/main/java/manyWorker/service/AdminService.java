@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import manyWorker.entity.Actor;
 import manyWorker.entity.Admin;
 import manyWorker.repository.AdminRepository;
 
@@ -52,5 +53,9 @@ public class AdminService {
 	
 	public boolean existsById(int id) {
 	    return this.adminRepository.existsById(id);
+	}
+
+	public Optional<Actor> findByUsername(String username) {
+		return adminRepository.findByUsername(username);
 	}
 }

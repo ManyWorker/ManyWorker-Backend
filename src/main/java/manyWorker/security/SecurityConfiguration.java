@@ -35,27 +35,39 @@ public class SecurityConfiguration {
 		public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 			http.csrf(csrf -> csrf.disable()).authorizeHttpRequests(auth -> auth
 					// Rutas públicas
-					.requestMatchers(HttpMethod.POST, "/login").permitAll()
+					.requestMatchers("/actor/login").permitAll()
 					.requestMatchers(HttpMethod.POST, "/trabajador").permitAll()
 					.requestMatchers(HttpMethod.POST, "/cliente").permitAll()				
-					.requestMatchers(HttpMethod.GET, "/trabajador/*").permitAll()
+					.requestMatchers("/tutoriales/**").permitAll()
 
 					// Rutas ADMINISTRADOR
-					.requestMatchers("/admin/**").hasRole("ADMINISTRADOR")
-		            .requestMatchers(HttpMethod.GET, "/trabajador").hasRole("ADMINISTRADOR")
-		            .requestMatchers(HttpMethod.GET, "/cliente", "/cliente/*").hasRole("ADMINISTRADOR")
-					.requestMatchers(HttpMethod.PUT, "/banear/**").hasRole("ADMINISTRADOR")
-					.requestMatchers(HttpMethod.PUT, "/desbanear/**").hasRole("ADMINISTRADOR")
+					.requestMatchers("/admin/**").hasAuthority("ADMINISTRADOR")
+		            .requestMatchers(HttpMethod.GET, "/trabajador").hasAuthority("ADMINISTRADOR")
+		            .requestMatchers(HttpMethod.GET, "/cliente", "/cliente/*").hasAuthority("ADMINISTRADOR")
+					.requestMatchers(HttpMethod.PUT, "/banear/**").hasAuthority("ADMINISTRADOR")
+					.requestMatchers(HttpMethod.PUT, "/desbanear/**").hasAuthority("ADMINISTRADOR")
+					.requestMatchers("/categorias/**").hasAuthority("ADMINISTRADOR")
+					.requestMatchers("/mensajes/broadcast").hasAuthority("ADMINISTRADOR")
 
 					// Rutas TRABAJADOR
-					.requestMatchers(HttpMethod.PUT, "/trabajador").hasRole("TRABAJADOR")
-					.requestMatchers(HttpMethod.DELETE, "/trabajador").hasRole("TRABAJADOR")
+					.requestMatchers("/trabajador/**").hasAuthority("TRABAJADOR")
+					.requestMatchers("/solicitudes", "/solicitudes/**").hasAuthority("TRABAJADOR")
+					.requestMatchers(HttpMethod.PUT, "/trabajador").hasAuthority("TRABAJADOR")
+					.requestMatchers(HttpMethod.DELETE, "/trabajador").hasAuthority("TRABAJADOR")
 
 					// Rutas CLIENTE
-					.requestMatchers(HttpMethod.PUT, "/cliente").hasRole("CLIENTE")
-					.requestMatchers(HttpMethod.DELETE, "/cliente").hasRole("CLIENTE")
-					.requestMatchers("/cliente/miPerfil").hasRole("CLIENTE")
+					.requestMatchers("/cliente/**").hasAuthority("CLIENTES")
+					.requestMatchers("/tareas/**").hasAuthority("CLIENTES")
+					.requestMatchers("/solicitudes/**/aceptar").hasAuthority("CLIENTES")
+					.requestMatchers("/solicitudes/**/rechazar").hasAuthority("CLIENTES")
+					.requestMatchers(HttpMethod.PUT, "/cliente").hasAuthority("CLIENTES")
+					.requestMatchers(HttpMethod.DELETE, "/cliente").hasAuthority("CLIENTES")
+					.requestMatchers("/cliente/miPerfil").hasAuthority("CLIENTES")
 
+					// Endpoints compartidos (CLIENTE y TRABAJADOR)
+					.requestMatchers("/mensajes/**").hasAnyAuthority("CLIENTES", "TRABAJADOR")
+					.requestMatchers("/perfilSocial/**").hasAnyAuthority("CLIENTES", "TRABAJADOR")
+					
 					// Poned los endpoints de la tarea 8 aqui ordenados (cada uno los endpoint de las entity q hicisteis en la primera parte)
 					
 					

@@ -38,7 +38,6 @@ public class SecurityConfiguration {
             .requestMatchers("/actor/login").permitAll()
             .requestMatchers(HttpMethod.POST, "/trabajador").permitAll()
             .requestMatchers(HttpMethod.POST, "/cliente").permitAll()                
-            .requestMatchers("/tutoriales/**").permitAll()
 
             // Rutas ADMINISTRADOR
             .requestMatchers("/admin/**").hasAuthority("ADMINISTRADOR")
@@ -82,6 +81,12 @@ public class SecurityConfiguration {
             .requestMatchers(HttpMethod.GET, "/mensajes/mensajes").hasAuthority("ADMINISTRADOR")
             .requestMatchers(HttpMethod.POST, "/mensajes/broadcast").hasAuthority("ADMINISTRADOR")
             .requestMatchers(HttpMethod.DELETE, "/mensajes/{id}").hasAuthority("ADMINISTRADOR")
+            
+            // Rutas TUTORIALES
+            .requestMatchers(HttpMethod.GET, "/tutoriales/**").permitAll() 
+            .requestMatchers(HttpMethod.POST, "/tutoriales").hasAuthority("TRABAJADOR")
+            .requestMatchers(HttpMethod.PUT, "/tutoriales/**").hasAuthority("TRABAJADOR")
+            .requestMatchers(HttpMethod.DELETE, "/tutoriales/**").hasAnyAuthority("TRABAJADOR", "ADMINISTRADOR")
             
             // Endpoints de Categoría
             .requestMatchers(HttpMethod.GET, "/categorias/**").permitAll()

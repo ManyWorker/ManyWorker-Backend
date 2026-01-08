@@ -47,7 +47,6 @@ public class SecurityConfiguration {
 					.requestMatchers(HttpMethod.PUT, "/banear/**").hasAuthority("ADMINISTRADOR")
 					.requestMatchers(HttpMethod.PUT, "/desbanear/**").hasAuthority("ADMINISTRADOR")
 					//.requestMatchers("/categorias/**").hasAuthority("ADMINISTRADOR")
-					.requestMatchers("/mensajes/broadcast").hasAuthority("ADMINISTRADOR")
 
 					// Rutas TRABAJADOR
 					.requestMatchers("/trabajador/**").hasAuthority("TRABAJADOR")
@@ -65,10 +64,16 @@ public class SecurityConfiguration {
 					.requestMatchers("/cliente/miPerfil").hasAuthority("CLIENTES")
 
 					// Endpoints compartidos (CLIENTE y TRABAJADOR)
-					.requestMatchers("/mensajes/**").hasAnyAuthority("CLIENTES", "TRABAJADOR")
 					.requestMatchers("/perfilSocial/**").hasAnyAuthority("CLIENTES", "TRABAJADOR")
 					
 					// Poned los endpoints de la tarea 8 aqui ordenados (cada uno los endpoint de las entity q hicisteis en la primera parte)
+					
+					// Rutas MENSAJE
+					
+					.requestMatchers("/mensajes/**").hasAnyAuthority("CLIENTES", "TRABAJADOR", "ADMINISTRADOR")
+					.requestMatchers(HttpMethod.GET, "/mensajes/mensajes").hasAuthority("ADMINSTRADOR")
+					.requestMatchers(HttpMethod.POST, "/mensajes/broadcast").hasAuthority("ADMINISTRADOR")
+					.requestMatchers(HttpMethod.DELETE, "/mensajes/{id}").hasAuthority("ADMINISTRADOR")
 					
 					// Endpoints de Categoría
 					// Permitir ver categorías a todo el mundo (público)

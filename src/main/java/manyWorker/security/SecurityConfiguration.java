@@ -66,15 +66,15 @@ public class SecurityConfiguration {
             .requestMatchers(HttpMethod.GET, "/solicitudes/{id}").hasAnyAuthority("CLIENTES", "TRABAJADOR")
             .requestMatchers(HttpMethod.PUT, "/solicitudes/{id}").hasAnyAuthority("CLIENTES", "TRABAJADOR")
             .requestMatchers(HttpMethod.DELETE, "/solicitudes/{id}").hasAuthority("ADMINISTRADOR")
-            .requestMatchers("/solicitudes/**/asignar").hasAuthority("TRABAJADOR")
-            .requestMatchers("/solicitudes/**/finalizar").hasAuthority("TRABAJADOR")
-            .requestMatchers("/solicitudes/**/comenzar").hasAuthority("TRABAJADOR")
+            .requestMatchers("/solicitudes/*/asignar").hasAuthority("TRABAJADOR")
+            .requestMatchers("/solicitudes/*/finalizar").hasAuthority("TRABAJADOR")
+            .requestMatchers("/solicitudes/*/comenzar").hasAuthority("TRABAJADOR")
             
             // Operaciones específicas de cliente
-            .requestMatchers("/solicitudes/**/aceptar").hasAuthority("CLIENTES")
-            .requestMatchers("/solicitudes/**/rechazar").hasAuthority("CLIENTES")
-            .requestMatchers("/solicitudes/**/cancelar").hasAuthority("CLIENTES")
-            .requestMatchers("/solicitudes/**/valorar").hasAuthority("CLIENTES")
+            .requestMatchers("/solicitudes/*/aceptar").hasAuthority("CLIENTES")
+            .requestMatchers("/solicitudes/*/rechazar").hasAuthority("CLIENTES")
+            .requestMatchers("/solicitudes/*/cancelar").hasAuthority("CLIENTES")
+            .requestMatchers("/solicitudes/*/valorar").hasAuthority("CLIENTES")
             
             // Rutas MENSAJE
             .requestMatchers(HttpMethod.POST, "/mensajes/enviar").hasAnyAuthority("CLIENTES", "TRABAJADOR", "ADMINISTRADOR")

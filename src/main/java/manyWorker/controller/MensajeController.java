@@ -24,6 +24,7 @@ class EnviarMensajeRequest {
 	 public String usernameDestinatario;  // Usar username en lugar de ID
 	 public String asunto;
 	 public String cuerpo;
+	 
 }
 
 //DTO para broadcast
@@ -96,32 +97,41 @@ public class MensajeController {
         @ApiResponse(responseCode = "403", description = "No autorizado, permisos insuficientes"),
     })
     public ResponseEntity<?> enviarMensaje(@RequestBody EnviarMensajeRequest request) {
-    	try {
-            Actor remitente = (Actor) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        try {
+            // 1. CORRECCIÓN: Obtener el username del contexto de seguridad (siempre es seguro)
+            String usernameRemitente = SecurityContextHolder.getContext().getAuthentication().getName();
             
-            if (remitente == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Usuario no autenticado");
+            // 2. Buscar al remitente en la base de datos
+            Optional<Actor> oRemitente = actorRepository.findByUsername(usernameRemitente);
+            
+            if (!oRemitente.isPresent()) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Usuario remitente no encontrado");
             }
-            
+            Actor remitente = oRemitente.get();
+
+            // 3. Buscar destinatario
             Optional<Actor> oDestinatario = actorRepository.findByUsername(request.usernameDestinatario);
             
             if (!oDestinatario.isPresent()) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Destinatario no encontrado");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Destinatario '" + request.usernameDestinatario + "' no encontrado");
             }
             
             Actor destinatario = oDestinatario.get();
             
+            // Validaciones
             if (request.asunto == null || request.asunto.trim().isEmpty()) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("El asunto del mensaje es obligatorio");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("El asunto es obligatorio");
             }
             if (request.cuerpo == null || request.cuerpo.trim().isEmpty()) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("El cuerpo del mensaje es obligatorio");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("El cuerpo es obligatorio");
             }
             
+            // Enviar
             Mensaje nuevo = mensajeService.enviarMensaje(remitente.getId(), destinatario.getId(), request.asunto, request.cuerpo);
             return ResponseEntity.status(HttpStatus.CREATED).body(nuevo);
             
         } catch (Exception e) {
+            e.printStackTrace(); // Esto imprimirá el error real en la consola de Java (Eclipse/IntelliJ)
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error al enviar el mensaje: " + e.getMessage());
         }

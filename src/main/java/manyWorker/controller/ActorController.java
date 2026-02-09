@@ -23,6 +23,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import manyWorker.entity.Actor;
 import manyWorker.entity.ActorLogin;
 import manyWorker.security.JWTUtils;
+import manyWorker.service.ActorService;
 
 @RestController
 @RequestMapping("/actor")
@@ -31,6 +32,9 @@ public class ActorController {
 
     @Autowired
     private AuthenticationManager authenticationManager;
+    
+    @Autowired
+    private ActorService actorService;
 
     @Autowired
     private JWTUtils jwtUtils;
@@ -45,6 +49,7 @@ public class ActorController {
     })
     public ResponseEntity<?> login(@RequestBody ActorLogin actorLogin) {
         try {
+            // Validaciones básicas
             if (actorLogin.getUsername() == null || actorLogin.getUsername().trim().isEmpty()) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("El nombre de usuario es obligatorio");
             }
@@ -53,6 +58,7 @@ public class ActorController {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("La contraseña es obligatoria");
             }
 
+            // Autenticación con Spring Security
             Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                     actorLogin.getUsername(), 
@@ -62,14 +68,25 @@ public class ActorController {
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
+            // Generar datos de sesión
             String token = jwtUtils.generateToken(authentication);
             String username = authentication.getName();
             String rol = authentication.getAuthorities().iterator().next().getAuthority();
 
+            // 2. BUSCAMOS EL USUARIO EN LA BD PARA OBTENER SU ID
+            // (Asumimos que ActorRepository tiene el método findByUsername)
+            Actor actor = actorService.findByUsername(username)
+                    .orElseThrow(() -> new RuntimeException("Error: Usuario autenticado pero no encontrado en BD."));
+
+            // Construir respuesta JSON
             Map<String, Object> response = new HashMap<>();
             response.put("token", token);
             response.put("username", username);
             response.put("rol", rol);
+            
+            // 3. AÑADIMOS EL ID A LA RESPUESTA
+            response.put("id", actor.getId()); 
+            
             response.put("message", "Login exitoso");
 
             return ResponseEntity.ok(response);

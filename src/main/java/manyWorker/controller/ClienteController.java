@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import manyWorker.entity.Actor;
 import manyWorker.entity.Cliente;
 import manyWorker.security.JWTUtils;
 import manyWorker.service.ClienteService;
@@ -54,8 +55,8 @@ public class ClienteController {
         @ApiResponse(responseCode = "403", description = "No autorizado, permisos insuficientes"),
     })
     public ResponseEntity<?> findById(@PathVariable int id) {
-    	Cliente clienteLogueado = jwtUtils.userLogin();
-        
+    	Actor clienteLogueado = jwtUtils.userLogin();
+    	
         if (clienteLogueado == null || (clienteLogueado.getId() != id && !"ADMINISTRADOR".equals(clienteLogueado.getRol().name()))) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No tienes permiso para ver este perfil");
         }

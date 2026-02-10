@@ -18,6 +18,7 @@ import manyWorker.service.CategoriaService;
 @RestController
 @RequestMapping("/categorias")
 @Tag(name = "Categorías", description = "Controlador para la gestión de categorías")
+@CrossOrigin(origins = "http://localhost:4200")
 public class CategoriaController {
 
     @Autowired

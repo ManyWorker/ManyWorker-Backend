@@ -49,6 +49,9 @@ public class Actor extends DomainEntity{
 	
 	private boolean baneado;
 	
+	@Column(nullable = false)
+	private String authority;
+	
 	//Constructor
 	public Actor(@NotBlank String nombre, @NotBlank String apellido, String apellido2, @URL String foto,
 			@Pattern(regexp = "^[\\w._%+-]+@[\\w.-]+\\.[a-zA-Z]{2,}$") String correo, @Pattern(regexp = "^[6-9][0-9]{8}$") String telefono,
@@ -165,5 +168,13 @@ public class Actor extends DomainEntity{
 
 	public void setBaneado(boolean baneado) {
 		this.baneado = baneado;
+	}
+	
+	public String getAuthority() {
+		return authority;
+	}
+
+	public void setAuthority(String authority) {
+		this.authority = authority;
 	}
 }

@@ -10,7 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-/*
+
 @Component
 public class DataInitializer implements CommandLineRunner {
 
@@ -76,7 +76,6 @@ public class DataInitializer implements CommandLineRunner {
             cat.setTitulo(titulo);
             cat.setEsReparacion(true);
             cat.setLeyesAplicables("Normativa ISO-9001 y CTE.");
-            // El ID se genera automáticamente por el @PrePersist de tu entidad
             categoriaRepository.save(cat);
         }
         System.out.println(">> Categorías insertadas correctamente.");
@@ -91,11 +90,9 @@ public class DataInitializer implements CommandLineRunner {
         admin.setTelefono("600000000");
         admin.setDireccion("Calle Principal 1");
         admin.setRol(Roles.ADMINISTRADOR);
-        
-        // --- CORRECCIÓN: AÑADIR CREDENCIALES ---
+        admin.setAuthority(Roles.ADMINISTRADOR.toString());
         admin.setUsername("admin"); 
-        admin.setPassword(passwordEncoder.encode("admin123")); // Nota: Si usas Spring Security, esto debería ir encriptado
-        // ---------------------------------------
+        admin.setPassword(passwordEncoder.encode("admin123"));
 
         adminRepository.save(admin);
         System.out.println(">> Admin creado: admin@manyworker.com");
@@ -105,14 +102,12 @@ public class DataInitializer implements CommandLineRunner {
         cliente.setNombre("Juan");
         cliente.setApellido("Pérez");
         cliente.setRol(Roles.CLIENTE);
+        cliente.setAuthority(Roles.CLIENTE.toString());
         cliente.setCorreo("juan@cliente.com");
         cliente.setTelefono("611223344");
         cliente.setDireccion("Avenida del Cliente 23");
-        
-        // --- CORRECCIÓN: AÑADIR CREDENCIALES ---
         cliente.setUsername("juanperez");
         cliente.setPassword(passwordEncoder.encode("cliente123"));
-        // ---------------------------------------
 
         clienteRepository.save(cliente);
         System.out.println(">> Cliente creado: juan@cliente.com");
@@ -123,16 +118,13 @@ public class DataInitializer implements CommandLineRunner {
         trabajador.setApellido("Gotera");
         trabajador.setCorreo("pepe@trabajador.com");
         trabajador.setRol(Roles.TRABAJADOR);
+        trabajador.setAuthority(Roles.TRABAJADOR.toString());
         trabajador.setTelefono("699887766");
         trabajador.setDireccion("Polígono Industrial Norte");
         trabajador.setNombreComercial("Reformas Integrales Pepe S.L.");
-        
-        // --- CORRECCIÓN: AÑADIR CREDENCIALES ---
         trabajador.setUsername("pepegotera");
         trabajador.setPassword(passwordEncoder.encode("trabajador123"));
-        // ---------------------------------------
 
-        // Guardamos el trabajador primero
         trabajador = trabajadorRepository.save(trabajador);
         System.out.println(">> Trabajador creado: pepe@trabajador.com");
 
@@ -151,4 +143,4 @@ public class DataInitializer implements CommandLineRunner {
         tutorialRepository.save(tutorial);
         System.out.println(">> Tutorial creado vinculado a Pepe.");
     }
-}*/
+}

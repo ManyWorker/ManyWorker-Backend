@@ -6,13 +6,18 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import manyWorker.entity.Actor;
+import manyWorker.entity.Trabajador;
 import manyWorker.entity.Tutorial;
+import manyWorker.service.ActorService;
+import manyWorker.service.TrabajadorService;
 import manyWorker.service.TutorialService;
 
 @RestController
@@ -22,6 +27,9 @@ public class TutorialController {
     
     @Autowired
     private TutorialService tutorialService;
+    
+    @Autowired
+    private TrabajadorService trabajadorService;
     
     @GetMapping
     @Operation(summary = "Obtener todos los tutoriales", description = "Devuelve una lista de todos los tutoriales del sistema")
@@ -63,33 +71,42 @@ public class TutorialController {
     }
 
     @PostMapping
-    @Operation(summary = "Crear un nuevo tutorial", description = "Registra un nuevo tutorial en el sistema")
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "201", description = "Tutorial creado correctamente"),
-        @ApiResponse(responseCode = "400", description = "Datos del tutorial inválidos"),
-        @ApiResponse(responseCode = "500", description = "Error interno del servidor"),
-        @ApiResponse(responseCode = "401", description = "No autenticado token JWT requerido"),
-        @ApiResponse(responseCode = "403", description = "No autorizado, permisos insuficientes"),
-    })
     public ResponseEntity<?> save(@RequestBody Tutorial tutorial) {
         try {
-            if (tutorial.getTitulo() == null || tutorial.getTitulo().trim().isEmpty()) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("El título del tutorial es obligatorio");
+            // 1. Obtener el username del token
+            String username = SecurityContextHolder.getContext().getAuthentication().getName();
+            
+            // 2. Buscar al trabajador (autor)
+            // Usamos el repositorio de trabajador directamente para asegurar que existe
+            Trabajador autor = trabajadorService.findByUsername(username)
+                .orElse(null);
+
+            if (autor == null) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body("Solo los usuarios con perfil de TRABAJADOR pueden crear tutoriales.");
             }
-            if (tutorial.getAutor() == null) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("El autor del tutorial es obligatorio");
+
+            // 3. Validaciones de contenido (Título y Texto)
+            if (tutorial.getTitulo() == null || tutorial.getTitulo().trim().isEmpty()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("El título es obligatorio");
             }
             if (tutorial.getTexto() == null || tutorial.getTexto().trim().isEmpty()) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("El contenido del tutorial es obligatorio");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("El contenido es obligatorio");
             }
+
+            // 4. ASIGNACIÓN AUTOMÁTICA (Aquí es donde arreglamos el error)
+            // Seteamos el autor que hemos buscado nosotros, no el que viene del JSON
+            tutorial.setAutor(autor);
             
+            // 5. Guardar
             Tutorial savedTutorial = tutorialService.save(tutorial);
-            return ResponseEntity.status(HttpStatus.CREATED)
-                    .body("Tutorial creado correctamente con ID: " + savedTutorial.getId());
-                    
+            return ResponseEntity.status(HttpStatus.CREATED).body(savedTutorial);
+            
         } catch (Exception e) {
+            // Logueamos el error en la consola de Java para saber qué pasó (SQL, NullPointer, etc)
+            e.printStackTrace(); 
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error al crear el tutorial: " + e.getMessage());
+                    .body("Error interno: " + e.getMessage());
         }
     }
     
